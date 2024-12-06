@@ -2,20 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+#__next {
+  height: 100%;
+  width: 100%;
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+.permanent-marker-regular {
+  font-family: "Permanent Marker", cursive;
+  font-weight: 400;
+  font-style: normal;
 }
+
+.noto-serif-telugu {
+  font-family: "Noto Serif Telugu", serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+

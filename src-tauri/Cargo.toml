@@ -1,0 +1,31 @@
+[package]
+name = "weather-app"
+version = "0.1.0"
+description = "A Tauri App"
+authors = ["you"]
+license = ""
+repository = ""
+default-run = "weather-app"
+edition = "2021"
+rust-version = "1.59"
+
+[build-dependencies]
+tauri-build = { version = "1.2.1", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+tauri = { version = "1.2.4", features = [ "window-start-dragging", "http-all"] }
+log = "0.4"
+tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
