@@ -15,10 +15,10 @@ async function fetchWithTauri(url: string) {
 export async function fetchWeather(city: string, apiKey: string) {
   try {
     // First, we need to get the coordinates for the city
-    const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${apiKey}`;
-    const geoData = typeof window !== 'undefined' && 'Tauri' in window
-      ? await fetchWithTauri(geoUrl)
-      : await (await fetch(geoUrl)).json();
+    const geoResponse = await fetch(
+      `http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${apiKey}`
+    );
+    const geoData = await geoResponse.json();
 
     if (!geoData.length) {
       throw new Error('City not found');
@@ -27,10 +27,19 @@ export async function fetchWeather(city: string, apiKey: string) {
     const { lat, lon } = geoData[0];
 
     // Now we can use the coordinates to fetch weather data from One Call API 3.0
-    const weatherUrl = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,daily,alerts&units=metric&appid=${apiKey}`;
-    const data = typeof window !== 'undefined' && 'Tauri' in window
-      ? await fetchWithTauri(weatherUrl)
-      : await (await fetch(weatherUrl)).json();
+    const weatherResponse = await fetch(
+      `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,daily,alerts&units=metric&appid=${apiKey}`
+    );
+
+    if (!weatherResponse.ok) {
+      if (weatherResponse.status === 401) {
+        throw new Error('Invalid API key');
+      } else {
+        throw new Error('Failed to fetch weather data');
+      }
+    }
+
+    const data = await weatherResponse.json();
 
     const { current } = data;
 
@@ -44,8 +53,11 @@ export async function fetchWeather(city: string, apiKey: string) {
       timeOfDay: getTimeOfDay(current.dt, data.timezone_offset),
     };
   } catch (error) {
-    console.error('Error fetching weather data:', error);
-    throw new Error('Failed to fetch weather data');
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error('An unexpected error occurred');
+    }
   }
 }
 
@@ -71,6 +83,5 @@ export async function fetchCityFromCoords(lat: number, lon: number, apiKey: stri
 
   return data[0].name;
 }
-
 
 

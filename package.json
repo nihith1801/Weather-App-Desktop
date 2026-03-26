@@ -11,11 +11,7 @@
     "build-tauri": "next build && tauri build"
   },
   "dependencies": {
-    "@crabnebula/tauri-plugin-drag": "^2.0.0",
-    "@nextui-org/button": "^2.0.38",
-    "@nextui-org/card": "^2.0.34",
-    "@nextui-org/input": "^2.2.5",
-    "@nextui-org/react": "^2.4.8",
+    "@nextui-org/react": "^2.1.7",
     "@tauri-apps/api": "^1.4.0",
     "@types/node": "20.4.5",
     "@types/react": "18.2.17",
@@ -26,8 +22,8 @@
     "framer-motion": "^10.15.0",
     "gsap": "^3.12.2",
     "lucide-react": "^0.263.1",
-    "next": "^15.0.3",
-    "postcss": "^8.4.49",
+    "next": "13.4.12",
+    "postcss": "8.4.27",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "tailwindcss": "3.3.3",
@@ -37,3 +33,4 @@
     "@tauri-apps/cli": "^1.4.0"
   }
 }
+

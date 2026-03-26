@@ -1,14 +1,21 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { WeatherCard } from '../components/WeatherCard'
+import { ForecastCard } from '../components/ForecastCard'
+import { CircularPopup } from '../components/CircularPopup'
 import { fetchWeather, fetchCityFromCoords } from '../utils/api'
+import { gsap } from 'gsap'
 
 export default function Home() {
   const [weather, setWeather] = useState(null)
+  const [forecast, setForecast] = useState(null)
   const [error, setError] = useState(null)
-  const [apiKey] = useState('key')
+  const [apiKey] = useState('80128c9bc0416d0ad81ba57c40c9b871')
   const [isLoading, setIsLoading] = useState(true)
+  const [showForecast, setShowForecast] = useState(false)
+  const [isMinimized, setIsMinimized] = useState(false)
+  const containerRef = useRef(null)
 
   useEffect(() => {
     const detectCity = async () => {
@@ -39,12 +46,54 @@ export default function Home() {
       setIsLoading(true)
       const data = await fetchWeather(city, apiKey)
       setWeather(data)
+      // For this example, we'll generate mock forecast data
+      setForecast(generateMockForecast())
     } catch (error) {
       console.error('Error fetching weather:', error)
-      setError('Failed to fetch weather data. Please check your internet connection and try again.')
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('An unexpected error occurred. Please try again later.')
+      }
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const generateMockForecast = () => {
+    const forecast = []
+    const today = new Date()
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(today)
+      date.setDate(today.getDate() + i)
+      forecast.push({
+        date: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+        temp: Math.round(Math.random() * 20 + 10),
+        humidity: Math.round(Math.random() * 50 + 30),
+        wind_speed: Math.round(Math.random() * 10 + 1),
+      })
+    }
+    return forecast
+  }
+
+  const handleMinimize = () => {
+    gsap.to(containerRef.current, {
+      scale: 0.1,
+      opacity: 0,
+      duration: 0.5,
+      ease: "power3.inOut",
+      onComplete: () => setIsMinimized(true)
+    });
+  }
+
+  const handleExpand = () => {
+    setIsMinimized(false);
+    gsap.from(containerRef.current, {
+      scale: 0.1,
+      opacity: 0,
+      duration: 0.5,
+      ease: "power3.inOut"
+    });
   }
 
   if (isLoading) {
@@ -62,7 +111,18 @@ export default function Home() {
           {error}
         </div>
       ) : weather ? (
-        <WeatherCard weather={weather} />
+        isMinimized ? (
+          <CircularPopup temp={weather.temp} onExpand={handleExpand} />
+        ) : (
+          <div ref={containerRef} className="relative">
+            <WeatherCard 
+              weather={weather} 
+              onShowForecast={() => setShowForecast(true)} 
+              onMinimize={handleMinimize}
+            />
+            {showForecast && <ForecastCard forecast={forecast} />}
+          </div>
+        )
       ) : null}
     </div>
   )

@@ -1,7 +1,10 @@
 'use client'
 
-import { Card, CardHeader, CardBody, CardFooter } from "@nextui-org/card"
-import { useEffect, useState } from 'react'
+import { CardHeader, CardBody, CardFooter } from "@nextui-org/card"
+import { Button } from "@nextui-org/button"
+import { useEffect, useState, useRef } from 'react'
+import { Droplets, Wind, ChevronDown } from 'lucide-react'
+import { gsap } from 'gsap'
 
 const weatherGifs = {
   Clear: {
@@ -46,18 +49,23 @@ const capitalizeWords = (str: string) => {
 
 interface WeatherCardProps {
   weather: any;
+  onShowForecast: () => void;
+  onMinimize: () => void;
 }
 
-export function WeatherCard({ weather }: WeatherCardProps) {
+export function WeatherCard({ weather, onShowForecast, onMinimize }: WeatherCardProps) {
   const [currentTime, setCurrentTime] = useState('')
   const [isClient, setIsClient] = useState(false)
+  const cardRef = useRef(null)
+  const clickCount = useRef(0)
+  const clickTimer = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     setIsClient(true)
     const updateTime = () => {
       setCurrentTime(formatTime(new Date()))
     }
-    updateTime() // Set initial time
+    updateTime()
     const timer = setInterval(updateTime, 1000)
 
     return () => clearInterval(timer)
@@ -76,6 +84,27 @@ export function WeatherCard({ weather }: WeatherCardProps) {
     }
   }, []);
 
+  useEffect(() => {
+    gsap.from(cardRef.current, {
+      scale: 0.8,
+      opacity: 0,
+      duration: 0.5,
+      ease: "power3.out"
+    });
+  }, []);
+
+  const handleClick = () => {
+    clickCount.current += 1;
+    if (clickTimer.current) clearTimeout(clickTimer.current);
+
+    clickTimer.current = setTimeout(() => {
+      if (clickCount.current === 3) {
+        onMinimize();
+      }
+      clickCount.current = 0;
+    }, 300);
+  };
+
   if (!weather) return null
 
   const { main, description, temp, humidity, wind_speed, name, timeOfDay } = weather
@@ -86,37 +115,52 @@ export function WeatherCard({ weather }: WeatherCardProps) {
   }
 
   return (
-    <Card 
-      isHoverable 
-      isPressable 
-      className="w-[350px] h-[500px] overflow-hidden rounded-3xl shadow-2xl cursor-move"
+    <div 
+      ref={cardRef}
+      className="w-[350px] h-[500px] overflow-hidden rounded-3xl shadow-2xl cursor-move font-roboto-mono relative"
       style={{
         backgroundImage: `url(${getBackgroundGif(main, timeOfDay)})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
+      onClick={handleClick}
     >
       <div 
         className="absolute top-0 left-0 w-full h-8 cursor-move" 
         data-tauri-drag-region
       />
-      <CardHeader className="absolute z-10 top-2 left-2 flex-col items-start">
+      <div className="absolute z-10 top-2 left-2 flex-col items-start">
         <h4 className="font-bold text-3xl text-white drop-shadow-lg">{name.split(',')[0]}</h4>
         <p className="text-lg italic font-medium text-white/90 drop-shadow-lg tracking-wide">{capitalizeWords(description)}</p>
         <p className="text-sm text-white/90 drop-shadow-lg capitalize">{timeOfDay}</p>
         {isClient && (
           <p className="text-xl font-bold text-white drop-shadow-lg mt-2">{currentTime}</p>
         )}
-      </CardHeader>
-      <CardBody className="absolute z-10 bottom-16 left-2 p-2">
+      </div>
+      <div className="absolute z-10 bottom-16 left-2 p-2">
         <p className="text-7xl font-bold text-white drop-shadow-lg">{temp}°C</p>
-      </CardBody>
-      <CardFooter className="absolute z-10 bottom-2 right-2 flex-col items-end">
-        <p className="text-white drop-shadow-lg text-lg">Humidity: {humidity}%</p>
-        <p className="text-white drop-shadow-lg text-lg">Wind: {wind_speed} m/s</p>
-      </CardFooter>
+      </div>
+      <div className="absolute z-10 bottom-2 right-2 flex-col items-end">
+        <div className="flex items-center text-white drop-shadow-lg text-lg mb-1">
+          <Droplets className="mr-2" size={20} />
+          <span>Humidity: {humidity}%</span>
+        </div>
+        <div className="flex items-center text-white drop-shadow-lg text-lg">
+          <Wind className="mr-2" size={20} />
+          <span>Wind: {wind_speed} m/s</span>
+        </div>
+      </div>
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent z-0" />
-    </Card>
+      <Button
+        className="absolute bottom-2 left-2 z-20 bg-white/20 hover:bg-white/30 text-white"
+        onClick={(e) => {
+          e.stopPropagation();
+          onShowForecast();
+        }}
+      >
+        <ChevronDown size={24} />
+      </Button>
+    </div>
   )
 }
 
